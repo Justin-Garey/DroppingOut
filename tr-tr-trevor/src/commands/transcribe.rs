@@ -1,3 +1,8 @@
+use songbird::{
+    CoreEvent,
+    EventHandler as VoiceEventHandler,
+};
+
 use serenity::client::Context;
 use serenity::model::id::GuildId;
 use serenity::builder::CreateApplicationCommand;
@@ -7,6 +12,25 @@ use serenity::model::prelude::interaction::application_command::{
 };
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::channel::ChannelType;
+
+struct Handler;
+
+#[async_trait]
+impl EventHandler for Handler {
+    async fn ready(&self, _: Context, ready: Ready) {
+        println!("{} is connected!", ready.user.name);
+    }
+}
+
+struct Receiver;
+
+impl Receiver {
+    pub fn new() -> Self {
+        // You can manage state here, such as a buffer of audio packet bytes so
+        // you can later store them in intervals.
+        Self { }
+    }
+}
 
 // maybe make channel autoselection? aka. join the sending user's voice channel when unspecified
 pub async fn run(ctx: &Context, guild_id: GuildId, options: &[CommandDataOption]) -> String {
@@ -29,9 +53,14 @@ pub async fn run(ctx: &Context, guild_id: GuildId, options: &[CommandDataOption]
         };
     let manager = songbird::get(ctx).await
         .expect("Songbird Voice client placed in at initialisation.").clone();
-    let _handler = manager.join(guild_id, channel_id).await;
+    let handler = manager.join(guild_id, channel_id).await;
 
-    return format!("Transcription of channel <#{}> begun.", channel_id);
+    handler.add_global_event(
+        CoreEvent::VoicePacket.into(),
+        Receiver::new(),
+    );
+
+    format!("Transcription of channel <#{}> begun.", channel_id)
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
