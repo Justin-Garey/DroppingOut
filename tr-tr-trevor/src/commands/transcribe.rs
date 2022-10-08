@@ -33,7 +33,7 @@ pub async fn run(ctx: &Context, guild_id: GuildId, options: &[CommandDataOption]
         .expect("Songbird Voice client placed in at initialisation.").clone();
     let _handler = manager.join(guild_id, channel_id).await;
 
-    return "made it".to_string();
+    return format!("joined channel {}", guild_id);
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {

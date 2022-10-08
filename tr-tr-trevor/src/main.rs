@@ -33,6 +33,17 @@ impl EventHandler for Handler {
         if let Interaction::ApplicationCommand(command) = interaction {
             // println!("Received command interaction: {:#?}", command);
 
+            
+            if let Err(why) = command
+                .create_interaction_response(&ctx.http, |response| {
+                    response
+                        .kind(InteractionResponseType::ChannelMessageWithSource)
+                        .interaction_response_data(|message| message.content("Working...".to_string()))
+                }).await
+            {
+                println!("Cannot respond to slash command: {}", why);
+            }
+
             let content = match command.data.name.as_str() {
                 "ping" => commands::ping::run(&command.data.options),
                 "transcribe" => commands::transcribe::run(&ctx, guild_id, &command.data.options).await,
@@ -41,12 +52,9 @@ impl EventHandler for Handler {
             };
 
             if let Err(why) = command
-                .create_interaction_response(&ctx.http, |response| {
-                    response
-                        .kind(InteractionResponseType::ChannelMessageWithSource)
-                        .interaction_response_data(|message| message.content(content))
-                })
-                .await
+                .edit_original_interaction_response(&ctx.http, |response| {
+                    response.content(content)
+                }).await
             {
                 println!("Cannot respond to slash command: {}", why);
             }
