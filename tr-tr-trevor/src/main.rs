@@ -1,9 +1,13 @@
 mod commands;
-
+// use crate::commands::*;
 use std::env;
 
 use songbird::SerenityInit;
 use serenity::client::Context;
+use serenity::{
+    client::{Client, EventHandler},
+    Result as SerenityResult,
+};
 
 use serenity::async_trait;
 use serenity::model::application::command::Command;
@@ -18,13 +22,20 @@ struct Handler;
 #[async_trait]
 impl EventHandler for Handler {
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
+        let guild_id = GuildId(
+            env::var("GUILD_ID")
+                .expect("Expected GUILD_ID in environment")
+                .parse()
+                .expect("GUILD_ID must be an integer"),
+        );
+
         if let Interaction::ApplicationCommand(command) = interaction {
             // println!("Received command interaction: {:#?}", command);
 
             let content = match command.data.name.as_str() {
                 "ping" => commands::ping::run(&command.data.options),
-                "transcribe" => commands::transcribe::run(&command.data.options),
                 "disconnect" => commands::disconnect::run(&ctx, &command.data.options).await,
+                "transcribe" => commands::transcribe::run(&ctx, guild_id, &command.data.options).await,
                 _ => "not implemented :(".to_string(),
             };
 
@@ -72,6 +83,7 @@ async fn main() {
     // Build our client.
     let mut client = Client::builder(token, GatewayIntents::empty())
         .event_handler(Handler)
+        .register_songbird()
         .await
         .expect("Error creating client");
 
