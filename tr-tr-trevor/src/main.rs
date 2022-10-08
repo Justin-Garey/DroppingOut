@@ -40,13 +40,12 @@ impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
 
-        let guild_id = GuildId(1028322764995706982);
-        // GuildId(
-        //     env::var("GUILD_ID")
-        //         .expect("Expected GUILD_ID in environment")
-        //         .parse()
-        //         .expect("GUILD_ID must be an integer"),
-        // );
+        let guild_id = GuildId(
+            env::var("GUILD_ID")
+                .expect("Expected GUILD_ID in environment")
+                .parse()
+                .expect("GUILD_ID must be an integer"),
+        );
 
         let commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
             commands
@@ -66,7 +65,7 @@ impl EventHandler for Handler {
 #[tokio::main]
 async fn main() {
     // Configure the client with your Discord bot token in the environment.
-    let token = "MTAyODM1MDYxNzIyMTA4NzMzNQ.GcdWDD.-fMpkYTcng_0PQuWQmY13t_7GKlC3SjWv24Q4Q";//env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+    let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 
     // Build our client.
     let mut client = Client::builder(token, GatewayIntents::empty())
