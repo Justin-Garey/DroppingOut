@@ -4,6 +4,7 @@ use std::env;
 
 use serenity::async_trait;
 use serenity::model::application::command::Command;
+use serenity::model::channel::{Channel, ChannelType};
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
 use serenity::model::gateway::Ready;
 use serenity::model::id::GuildId;
@@ -19,7 +20,7 @@ impl EventHandler for Handler {
 
             let content = match command.data.name.as_str() {
                 "ping" => commands::ping::run(&command.data.options),
-                //"id" => commands::id::run(&command.data.options),
+                "disconnect" => commands::disconnect::run(&command.data.options),
                 //"attachmentinput" => commands::attachmentinput::run(&command.data.options),
                 _ => "not implemented :(".to_string(),
             };
@@ -50,6 +51,7 @@ impl EventHandler for Handler {
         let commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
             commands
                 .create_application_command(|command| commands::ping::register(command))
+                .create_application_command(|command| commands::disconnect::register(command))
                 //.create_application_command(|command| commands::id::register(command))
                 //.create_application_command(|command| commands::welcome::register(command))
                 //.create_application_command(|command| commands::numberinput::register(command))
@@ -57,7 +59,7 @@ impl EventHandler for Handler {
         })
         .await;
 
-        // println!("I now have the following guild slash commands: {:#?}", commands);
+        println!("I now have the following guild slash commands: {:#?}", commands);
 
     }
 }
