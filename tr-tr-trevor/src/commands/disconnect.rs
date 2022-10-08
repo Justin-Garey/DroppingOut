@@ -16,8 +16,9 @@ pub fn run(options: &[CommandDataOption]) -> String {
 
     if let CommandDataOptionValue::Channel(channel) = option {
         match channel.kind {
-            ChannelType::Voice  => format!("{}'s id is {}", channel.name.as_ref().expect("expected channel to have a name."), channel.id),
-            _                   => "Select a voice channel you twit".to_string(),
+            ChannelType::Voice | 
+            ChannelType::Stage  => format!("{}'s id is {}", channel.name.as_ref().expect("expected channel to have a name."), channel.id),
+            _                   => "Select a voice channel".to_string(),
         }
     } else {
         "Please provide a valid channel".to_string()
