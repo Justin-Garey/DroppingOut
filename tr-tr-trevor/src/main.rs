@@ -6,6 +6,7 @@ use songbird::SerenityInit;
 
 use serenity::async_trait;
 use serenity::model::application::command::Command;
+use serenity::model::channel::{Channel, ChannelType};
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
 use serenity::model::gateway::Ready;
 use serenity::model::id::GuildId;
