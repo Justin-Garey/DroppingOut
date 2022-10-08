@@ -34,8 +34,8 @@ impl EventHandler for Handler {
 
             let content = match command.data.name.as_str() {
                 "ping" => commands::ping::run(&command.data.options),
-                "disconnect" => commands::disconnect::run(&ctx, &command.data.options).await,
                 "transcribe" => commands::transcribe::run(&ctx, guild_id, &command.data.options).await,
+                "disconnect" => commands::disconnect::run(&ctx, guild_id).await,
                 _ => "not implemented :(".to_string(),
             };
 
