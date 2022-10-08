@@ -14,3 +14,8 @@ a rust backend hosted on an AWS EC2 instance.
 - t2.micro with 1vCPU and 1 GiB of memory
 - 30 GiB EBS volume
 - Amazon Linux for the OS
+
+### System Requirements
+- Need python/pip, rust and whisper installed
+- (Whisper)[https://github.com/openai/whisper]
+  - Use the pip command from their README 

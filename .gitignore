@@ -3,6 +3,9 @@
 *.log
 tmp/
 .env
+*.txt
+*.srt 
+*.vtt
 
 # Ignore Rust executables
 tr-tr-trevor/target/
