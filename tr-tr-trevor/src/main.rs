@@ -3,6 +3,7 @@ mod commands;
 use std::env;
 
 use songbird::SerenityInit;
+use serenity::client::Context;
 
 use serenity::async_trait;
 use serenity::model::application::command::Command;
@@ -23,7 +24,7 @@ impl EventHandler for Handler {
             let content = match command.data.name.as_str() {
                 "ping" => commands::ping::run(&command.data.options),
                 "transcribe" => commands::transcribe::run(&command.data.options),
-                "disconnect" => commands::disconnect::run(&command.data.options),
+                "disconnect" => commands::disconnect::run(&ctx, &command.data.options).await,
                 _ => "not implemented :(".to_string(),
             };
 

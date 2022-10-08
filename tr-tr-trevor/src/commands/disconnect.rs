@@ -1,3 +1,4 @@
+use serenity::client::Context;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::channel::{Channel, ChannelType};
@@ -6,7 +7,7 @@ use serenity::model::prelude::interaction::application_command::{
     CommandDataOptionValue,
 };
 
-pub fn run(options: &[CommandDataOption]) -> String {
+pub async fn run(ctx: &Context, options: &[CommandDataOption]) -> String {
     let option = options
         .get(0)
         .expect("Expected channel option")
