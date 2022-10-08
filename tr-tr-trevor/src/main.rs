@@ -20,7 +20,7 @@ impl EventHandler for Handler {
             let content = match command.data.name.as_str() {
                 "ping" => commands::ping::run(&command.data.options),
                 "transcribe" => commands::transcribe::run(&command.data.options),
-                //"attachmentinput" => commands::attachmentinput::run(&command.data.options),
+                "disconnect" => commands::disconnect::run(&command.data.options),
                 _ => "not implemented :(".to_string(),
             };
 
@@ -51,9 +51,7 @@ impl EventHandler for Handler {
             commands
                 .create_application_command(|command| commands::ping::register(command))
                 .create_application_command(|command| commands::transcribe::register(command))
-                //.create_application_command(|command| commands::welcome::register(command))
-                //.create_application_command(|command| commands::numberinput::register(command))
-                //.create_application_command(|command| commands::attachmentinput::register(command))
+                .create_application_command(|command| commands::disconnect::register(command))
         })
         .await;
 

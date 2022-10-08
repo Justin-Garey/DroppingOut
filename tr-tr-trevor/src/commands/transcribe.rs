@@ -13,9 +13,9 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
         .description("Start transcription of a voice chat")
         .create_option( |option| {
             option
-                .name("Voice Channel")
+                .name("voice_channel")
                 .description("Voice Channel to connect to")
-                .kind(CommandOptionType::String)
+                .kind(CommandOptionType::Channel)
                 .required(true)
         })
 }
