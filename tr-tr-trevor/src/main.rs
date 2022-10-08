@@ -2,6 +2,8 @@ mod commands;
 
 use std::env;
 
+use songbird::SerenityInit;
+
 use serenity::async_trait;
 use serenity::model::application::command::Command;
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
