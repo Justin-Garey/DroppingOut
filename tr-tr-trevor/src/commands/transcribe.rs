@@ -1,4 +1,3 @@
-use serenity::async_trait;
 use serenity::client::Context;
 use serenity::model::id::GuildId;
 use serenity::builder::CreateApplicationCommand;
@@ -7,10 +6,9 @@ use serenity::model::prelude::interaction::application_command::{
     CommandDataOptionValue,
 };
 use serenity::model::prelude::command::CommandOptionType;
-use serenity::model::channel::{Channel, ChannelType};
+use serenity::model::channel::ChannelType;
 
 // maybe make channel autoselection? aka. join the sending user's voice channel when unspecified
-// #[async_trait]
 pub async fn run(ctx: &Context, guild_id: GuildId, options: &[CommandDataOption]) -> String {
     let option = options
     .get(0)

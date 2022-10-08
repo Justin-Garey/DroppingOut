@@ -1,36 +1,23 @@
+use serenity::client::Context;
+use serenity::model::id::GuildId;
 use serenity::builder::CreateApplicationCommand;
-use serenity::model::prelude::command::CommandOptionType;
-use serenity::model::channel::{Channel, ChannelType};
-use serenity::model::prelude::interaction::application_command::{
-    CommandDataOption,
-    CommandDataOptionValue,
-};
 
-pub fn run(options: &[CommandDataOption]) -> String {
-    let option = options
-        .get(0)
-        .expect("Expected channel option")
-        .resolved
-        .as_ref()
-        .expect("Expected channel object");
+pub async fn run(ctx: &Context, guild_id: GuildId) -> String {
+    let manager = songbird::get(ctx).await
+        .expect("Songbird Voice client placed in at initialisation.").clone();
+    let has_handler = manager.get(guild_id).is_some();
 
-    if let CommandDataOptionValue::Channel(channel) = option {
-        match channel.kind {
-            ChannelType::Voice | 
-            ChannelType::Stage  => format!("{}'s id is {}", channel.name.as_ref().expect("expected channel to have a name."), channel.id),
-            _                   => "Select a voice channel".to_string(),
+    if has_handler {
+        if let Err(e) = manager.remove(guild_id).await {
+            return format!("Failed: {:?}", e);
         }
     } else {
-        "Please provide a valid channel".to_string()
+        return "Not in a voice channel".to_string();
     }
+
+    "Left voice channel".to_string()
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
-    command.name("disconnect").description("Disconnect from a channel").create_option(|option| {
-        option
-            .name("channel")
-            .description("The user to lookup")
-            .kind(CommandOptionType::Channel)
-            .required(true)
-    })
+    command.name("disconnect").description("Disconnect from a channel")
 }
