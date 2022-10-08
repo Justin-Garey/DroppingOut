@@ -2,7 +2,7 @@
 .idea
 *.log
 tmp/
-.env
+*.env
 *.txt
 *.srt 
 *.vtt
