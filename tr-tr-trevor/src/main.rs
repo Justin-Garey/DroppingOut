@@ -26,35 +26,46 @@ use serenity::http::client::Http;
 
 use std::fs;
 use std::fs::File;
+use std::path::Path;
 use std::io::prelude::*;
 use std::time::*;
 
 pub fn getTranscribedText() -> String {
 
     let mut rv: String = String::new();
-    let files = fs::read_dir("./").unwrap();
-    for file in files {
-        let f = file.unwrap().path().file_name().unwrap().to_str().unwrap().to_string();
-        // println!("{}",f);
-        if f.contains("message.txt") && !f.contains(".being_uploaded") {
-            // let newname = [f.clone(), ".being_uploaded".to_string()].concat();
-            // eprintln!("FUCKING newname: \'{}\'", newname);
-            // fs::rename(f, newname.clone());
-            fs::copy("message.txt", "messaged.txt"); 
+    if Path::new("message.txt").exists() {
+        fs::copy("message.txt", "messaged.txt");
+        {
+            let mut fd = File::open("messaged.txt").expect("couldnt open file we know exists...");
+            eprintln!("FUCKING file descriptor: \'{:?}\'", fd);
+            let _ = fd.read_to_string(&mut rv);
+        }
+        fs::remove_file("message.txt");
 
-            let mut tmp: String = String::new();//File::read_to_string(newname.clone()).unwrap().parse().unwrap();
-            {
-                let mut fd = File::open("messaged.txt").expect("couldnt open file we know exists...");
-                eprintln!("FUCKING file descriptor: \'{:?}\'", fd);
-                let str = fd.read_to_string(&mut tmp);
-
-            }
-            eprintln!("FUCKING tmp: \'{}\'", tmp);
-            rv = [rv, tmp].concat();
-            eprintln!("FUCKING rv: \'{}\'", rv);
-            // fs::remove_file(f);
-        } 
+    } else {
+        return String::new();
     }
+    
+    // let files = fs::read_dir("./").unwrap();
+    // for file in files {
+    //     let f = file.unwrap().path().file_name().unwrap().to_str().unwrap().to_string();
+    //     // println!("{}",f);
+    //     if f.contains("message.txt") {
+    //         fs::copy("message.txt", "messaged.txt"); 
+
+    //         let mut tmp: String = String::new();
+    //         {
+    //             let mut fd = File::open("messaged.txt").expect("couldnt open file we know exists...");
+    //             eprintln!("FUCKING file descriptor: \'{:?}\'", fd);
+    //             let str = fd.read_to_string(&mut tmp);
+
+    //         }
+    //         eprintln!("FUCKING tmp: \'{}\'", tmp);
+    //         rv = [rv, tmp].concat();
+    //         eprintln!("FUCKING rv: \'{}\'", rv);
+    //         fs::remove_file("message.txt");
+    //     } 
+    // }
 
     return rv;
 }
