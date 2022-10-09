@@ -38,6 +38,9 @@ pub async fn run(ctx: &Context, guild_id: GuildId, options: &[CommandDataOption]
     if let Ok(_) = conn_result {
         
         let mut handler = handler_lock.lock().await;
+
+        Command::new("./whisper_tr_tr.sh").spawn().expect("expected whisper_tr_tr to spawn...");
+
         handler.add_global_event(
             CoreEvent::SpeakingStateUpdate.into(),
             Receiver::new(),
