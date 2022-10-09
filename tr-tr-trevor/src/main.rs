@@ -8,7 +8,6 @@ use songbird::{
     model::payload::{ClientDisconnect, Speaking},
     Config,
     Event,
-    CoreEvent,
     EventContext,
     EventHandler as VoiceEventHandler,
     SerenityInit,
@@ -16,22 +15,19 @@ use songbird::{
 
 use serenity::{
     client::{Client, EventHandler, Context},
-    Result as SerenityResult,
 };
 
 use serenity::async_trait;
-use serenity::model::application::command::Command;
-use serenity::model::channel::{Channel, ChannelType};
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
 use serenity::model::gateway::Ready;
-use serenity::model::id::GuildId;
+use serenity::model::id::{GuildId, ChannelId};
 use serenity::prelude::*;
+use serenity::http::client::Http;
 
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 use std::time::*;
-
 
 struct Receiver;
 
@@ -110,6 +106,18 @@ impl VoiceEventHandler for Receiver {
                 // An event which fires for every received rtcp packet,
                 // containing the call statistics and reporting information.
                 // println!("RTCP packet received: {:?}", data.packet);
+                let channel_id = ChannelId(1028322765599682592);
+
+                let http = Http::new_with_application_id(
+                    &env::var("DISCORD_TOKEN").expect("Expected Discord token"),
+                    env::var("APP_ID").expect("Expected Application ID").parse::<u64>().unwrap(),
+                );
+
+                let msg = channel_id.send_message(&http, |m| {
+                    m.content("TRANSCRIBED TEXT")
+                }).await;
+
+                println!("WHY ARENT YOU PRINTING {:?} TO {:?}", msg, channel_id);
             },
             Ctx::ClientDisconnect(
                 ClientDisconnect {user_id, ..}
@@ -224,4 +232,9 @@ async fn main() {
     if let Err(why) = client.start().await {
         println!("Client error: {:?}", why);
     }
+}
+
+
+async fn print_transcript(message: String) {
+
 }
