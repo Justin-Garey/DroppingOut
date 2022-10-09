@@ -92,9 +92,9 @@ impl VoiceEventHandler for Receiver {
                         data.packet.payload.len(),
                         data.packet.ssrc,
                     );
-                    let mut file: File = File::create("audio").unwrap();
+                    let mut file: File = File::options().append(true).open("audio").unwrap();
                     let raw_audio = data.audio.clone();
-                    let audio_byte_tuples = raw_audio.unwrap().into_iter().map(|x| { x.to_be_bytes() });
+                    let audio_byte_tuples = raw_audio.unwrap().into_iter().map(|x| { x.to_le_bytes() });
                     let audio_bytes: Vec<u8> = audio_byte_tuples.flatten().collect();
                     file.write_all(&audio_bytes).unwrap();
                 } else {

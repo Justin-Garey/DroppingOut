@@ -6,6 +6,7 @@ tmp/
 *.txt
 *.srt 
 *.vtt
+*.wav
 
 # Ignore Rust executables
 target/
