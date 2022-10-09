@@ -81,7 +81,7 @@ impl VoiceEventHandler for Receiver {
 
                 if !data.speaking {
                     let unix_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
-                    fs::rename(data.ssrc.to_string(), format!("{}_processing_{}", unix_time, data.ssrc))
+                    fs::rename(data.ssrc.to_string(), format!("{}_processing_{}.pcm", unix_time, data.ssrc))
                         .expect("Couldn't rename user's file.");
                 }
             },
