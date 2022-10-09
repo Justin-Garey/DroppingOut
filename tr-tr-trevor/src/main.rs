@@ -1,5 +1,6 @@
 mod commands;
 // use crate::commands::*;
+
 use std::env;
 
 use songbird::{
@@ -7,6 +8,7 @@ use songbird::{
     model::payload::{ClientDisconnect, Speaking},
     Config,
     Event,
+    CoreEvent,
     EventContext,
     EventHandler as VoiceEventHandler,
     SerenityInit,
@@ -25,20 +27,23 @@ use serenity::model::gateway::Ready;
 use serenity::model::id::GuildId;
 use serenity::prelude::*;
 
-// struct Receiver;
+struct Receiver;
 
-// impl Receiver {
-//     pub fn new() -> Self {
-//         // You can manage state here, such as a buffer of audio packet bytes so
-//         // you can later store them in intervals.
-//         Self { }
-//     }
-// }
+impl Receiver {
+    pub fn new() -> Self {
+        // You can manage state here, such as a buffer of audio packet bytes so
+        // you can later store them in intervals.
+        println!("making new reciever");
+
+        Self { }
+    }
+}
 
 #[async_trait]
 impl VoiceEventHandler for Receiver {
     #[allow(unused_variables)]
     async fn act(&self, ctx: &EventContext<'_>) -> Option<Event> {
+        println!("acting");
         use EventContext as Ctx;
         match ctx {
             Ctx::SpeakingStateUpdate(
@@ -183,12 +188,15 @@ async fn main() {
     // Configure the client with your Discord bot token in the environment.
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 
+    let intents = GatewayIntents::non_privileged()
+        | GatewayIntents::MESSAGE_CONTENT;
+
     // Set up Songbird to decode audio packets
      let songbird_config = Config::default()
         .decode_mode(DecodeMode::Decode);
 
     // Build our client.
-    let mut client = Client::builder(token, GatewayIntents::empty())
+    let mut client = Client::builder(token, intents)
         .event_handler(Handler)
         .register_songbird_from_config(songbird_config)
         .await
