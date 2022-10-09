@@ -47,7 +47,6 @@ impl Receiver {
 impl VoiceEventHandler for Receiver {
     #[allow(unused_variables)]
     async fn act(&self, ctx: &EventContext<'_>) -> Option<Event> {
-        println!("acting");
         use EventContext as Ctx;
         match ctx {
             Ctx::SpeakingStateUpdate(
@@ -91,13 +90,13 @@ impl VoiceEventHandler for Receiver {
                 // containing the decoded data.
                 if let Some(audio) = data.audio {
                     println!("Audio packet's first 5 samples: {:?}", audio.get(..5.min(audio.len())));
-                    println!(
-                        "Audio packet sequence {:05} has {:04} bytes (decompressed from {}), SSRC {}",
-                        data.packet.sequence.0,
-                        audio.len() * std::mem::size_of::<i16>(),
-                        data.packet.payload.len(),
-                        data.packet.ssrc,
-                    );
+                    // println!(
+                    //     "Audio packet sequence {:05} has {:04} bytes (decompressed from {}), SSRC {}",
+                    //     data.packet.sequence.0,
+                    //     audio.len() * std::mem::size_of::<i16>(),
+                    //     data.packet.payload.len(),
+                    //     data.packet.ssrc,
+                    // );
                     let mut file: File = File::options().append(true).create(true).open(data.packet.ssrc.to_string()).unwrap();
                     let raw_audio = data.audio.clone();
                     let audio_byte_tuples = raw_audio.unwrap().into_iter().map(|x| { x.to_le_bytes() });
@@ -110,7 +109,7 @@ impl VoiceEventHandler for Receiver {
             Ctx::RtcpPacket(data) => {
                 // An event which fires for every received rtcp packet,
                 // containing the call statistics and reporting information.
-                println!("RTCP packet received: {:?}", data.packet);
+                // println!("RTCP packet received: {:?}", data.packet);
             },
             Ctx::ClientDisconnect(
                 ClientDisconnect {user_id, ..}

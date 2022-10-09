@@ -12,6 +12,8 @@ use serenity::model::prelude::interaction::application_command::{
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::channel::ChannelType;
 
+use std::process::Command;
+
 // maybe make channel autoselection? aka. join the sending user's voice channel when unspecified
 pub async fn run(ctx: &Context, guild_id: GuildId, options: &[CommandDataOption]) -> String {
     let option = options
