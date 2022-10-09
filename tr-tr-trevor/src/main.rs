@@ -27,6 +27,10 @@ use serenity::model::gateway::Ready;
 use serenity::model::id::GuildId;
 use serenity::prelude::*;
 
+use std::fs::File;
+use std::io::prelude::*;
+
+
 struct Receiver;
 
 impl Receiver {
@@ -88,6 +92,11 @@ impl VoiceEventHandler for Receiver {
                         data.packet.payload.len(),
                         data.packet.ssrc,
                     );
+                    let mut file: File = File::create("audio").unwrap();
+                    let raw_audio = data.audio.clone();
+                    let audio_byte_tuples = raw_audio.unwrap().into_iter().map(|x| { x.to_be_bytes() });
+                    let audio_bytes: Vec<u8> = audio_byte_tuples.flatten().collect();
+                    file.write_all(&audio_bytes).unwrap();
                 } else {
                     println!("RTP packet, but no audio. Driver may not be configured to decode.");
                 }
@@ -132,7 +141,7 @@ impl EventHandler for Handler {
         if let Interaction::ApplicationCommand(command) = interaction {
             // println!("Received command interaction: {:#?}", command);
 
-            
+
             if let Err(why) = command
                 .create_interaction_response(&ctx.http, |response| {
                     response
@@ -182,6 +191,7 @@ impl EventHandler for Handler {
 
     }
 }
+
 
 #[tokio::main]
 async fn main() {
