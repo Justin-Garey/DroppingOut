@@ -37,7 +37,6 @@ pub fn getTranscribedText() -> String {
         fs::copy("message.txt", "messaged.txt");
         {
             let mut fd = File::open("messaged.txt").expect("couldnt open file we know exists...");
-            eprintln!("FUCKING file descriptor: \'{:?}\'", fd);
             let _ = fd.read_to_string(&mut rv);
         }
         fs::remove_file("message.txt");
@@ -79,21 +78,21 @@ impl VoiceEventHandler for Receiver {
                 // SSRCs and map the SSRC to the User ID and maintain this state.
                 // Using this map, you can map the `ssrc` in `voice_packet`
                 // to the user ID and handle their audio packets separately.
-                println!(
-                    "Speaking state update: user {:?} has SSRC {:?}, using {:?}",
-                    user_id,
-                    ssrc,
-                    speaking,
-                );
+                // println!(
+                //     "Speaking state update: user {:?} has SSRC {:?}, using {:?}",
+                //     user_id,
+                //     ssrc,
+                //     speaking,
+                // );
             },
             Ctx::SpeakingUpdate(data) => {
                 // You can implement logic here which reacts to a user starting
                 // or stopping speaking, and to map their SSRC to User ID.
-                println!(
-                    "Source {} has {} speaking.",
-                    data.ssrc,
-                    if data.speaking {"started"} else {"stopped"},
-                );
+                // println!(
+                //     "Source {} has {} speaking.",
+                //     data.ssrc,
+                //     if data.speaking {"started"} else {"stopped"},
+                // );
 
                 if !data.speaking {
                     let unix_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
@@ -105,7 +104,7 @@ impl VoiceEventHandler for Receiver {
                 // An event which fires for every received audio packet,
                 // containing the decoded data.
                 if let Some(audio) = data.audio {
-                    println!("Audio packet's first 5 samples: {:?}", audio.get(..5.min(audio.len())));
+                    // println!("Audio packet's first 5 samples: {:?}", audio.get(..5.min(audio.len())));
                     // println!(
                     //     "Audio packet sequence {:05} has {:04} bytes (decompressed from {}), SSRC {}",
                     //     data.packet.sequence.0,
@@ -119,7 +118,7 @@ impl VoiceEventHandler for Receiver {
                     let audio_bytes: Vec<u8> = audio_byte_tuples.flatten().collect();
                     file.write_all(&audio_bytes).unwrap();
                 } else {
-                    println!("RTP packet, but no audio. Driver may not be configured to decode.");
+                    eprintln!("RTP packet, but no audio. Driver may not be configured to decode.");
                 }
             },
             Ctx::RtcpPacket(data) => {
@@ -139,7 +138,7 @@ impl VoiceEventHandler for Receiver {
                     m.content(tmp.clone())
                 }).await;
 
-                println!("WHY ARENT YOU PRINTING {} TO {:?}", tmp, channel_id);
+                // println!("WHY ARENT YOU PRINTING {} TO {:?}", tmp, channel_id);
 
                 fs::remove_file("message.txt");
             },
@@ -151,7 +150,7 @@ impl VoiceEventHandler for Receiver {
                 // You will typically need to map the User ID to their SSRC; observed when
                 // first speaking.
 
-                println!("Client disconnected: user {:?}", user_id);
+                // println!("Client disconnected: user {:?}", user_id);
                 
             },
             _ => {

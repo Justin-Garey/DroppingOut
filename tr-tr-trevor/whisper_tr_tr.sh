@@ -1,6 +1,6 @@
 #!/bin/env sh
 
-model="tiny"
+model="small"
 language="English"
 
 while true; do 
@@ -15,10 +15,10 @@ while true; do
 		messagefile="message.txt"
 
 		echo "Encoding . . ."
-		ffmpeg -y -f s16le -ar 96k -ac 1 -i ${oldestfile} "tmp.wav"
+		ffmpeg -y -f s16le -ar 96k -ac 1 -i ${oldestfile} "tmp.wav" &> /dev/null
 
 		echo "Whispering . . ."
-		whisper "tmp.wav" --language ${language} --model ${model} >> ${outfilename}
+		whisper "tmp.wav" --language ${language} --model ${model} > ${outfilename} 2> /dev/null
 
 		cat ${outfilename} ${outfileprevious} | uniq -u > $messagefile
 
