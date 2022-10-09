@@ -27,19 +27,25 @@ use serenity::model::gateway::Ready;
 use serenity::model::id::GuildId;
 use serenity::prelude::*;
 
+use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
+use std::time::*;
+use std::cell::Cell;
 
 
-struct Receiver;
+struct Receiver{
+    timer: Cell<Instant>,
+    // users: Vec<(u32, String)>,
+}
 
 impl Receiver {
     pub fn new() -> Self {
         // You can manage state here, such as a buffer of audio packet bytes so
         // you can later store them in intervals.
-        println!("making new reciever");
-
-        Self { }
+        Self {
+            timer: Cell<Instant::now()>,
+        }
     }
 }
 
@@ -79,6 +85,12 @@ impl VoiceEventHandler for Receiver {
                     data.ssrc,
                     if data.speaking {"started"} else {"stopped"},
                 );
+
+                if !data.speaking && self.timer.get().elapsed() > Duration::from_secs(10) {
+                    fs::rename(data.ssrc.to_string(), format!("{}.processing", data.ssrc))
+                        .expect("Couldn't rename user's file.");
+                    self.timer.set( Instant::now() );
+                }
             },
             Ctx::VoicePacket(data) => {
                 // An event which fires for every received audio packet,
@@ -92,7 +104,7 @@ impl VoiceEventHandler for Receiver {
                         data.packet.payload.len(),
                         data.packet.ssrc,
                     );
-                    let mut file: File = File::options().append(true).open("audio").unwrap();
+                    let mut file: File = File::options().append(true).create(true).open(data.packet.ssrc.to_string()).unwrap();
                     let raw_audio = data.audio.clone();
                     let audio_byte_tuples = raw_audio.unwrap().into_iter().map(|x| { x.to_le_bytes() });
                     let audio_bytes: Vec<u8> = audio_byte_tuples.flatten().collect();
