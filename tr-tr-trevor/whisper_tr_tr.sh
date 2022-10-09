@@ -20,7 +20,9 @@ while true; do
 		echo "Whispering . . ."
 		whisper "tmp.wav" --language ${language} --model ${model} >> ${outfilename}
 
-		cat ${outfilename} ${outfileprevious} | uniq > messagefile
+		# cat ${outfilename} ${outfileprevious} | uniq -u > $messagefile 
+		diff --line-format=%L ${outfilename} ${outfileprevious} > $messagefile
+		cp $outfilename $outfileprevious
 
 		echo "Cleaning up . . ."
 		rm ${oldestfile}
