@@ -31,21 +31,15 @@ use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 use std::time::*;
-use std::cell::Cell;
 
 
-struct Receiver{
-    timer: Cell<Instant>,
-    // users: Vec<(u32, String)>,
-}
+struct Receiver;
 
 impl Receiver {
     pub fn new() -> Self {
         // You can manage state here, such as a buffer of audio packet bytes so
         // you can later store them in intervals.
-        Self {
-            timer: Cell<Instant::now()>,
-        }
+        Self { }
     }
 }
 
@@ -86,10 +80,10 @@ impl VoiceEventHandler for Receiver {
                     if data.speaking {"started"} else {"stopped"},
                 );
 
-                if !data.speaking && self.timer.get().elapsed() > Duration::from_secs(10) {
-                    fs::rename(data.ssrc.to_string(), format!("{}.processing", data.ssrc))
+                if !data.speaking {
+                    let unix_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+                    fs::rename(data.ssrc.to_string(), format!("{}_processing_{}", unix_time, data.ssrc))
                         .expect("Couldn't rename user's file.");
-                    self.timer.set( Instant::now() );
                 }
             },
             Ctx::VoicePacket(data) => {

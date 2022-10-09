@@ -13,3 +13,8 @@ target/
 
 # Ignore auto-generated dependencies
 *.lock
+
+# Ignore data files from recordings/ffmpegs/whispers
+*_processing_*
+transcribed_*
+[0-9]*
