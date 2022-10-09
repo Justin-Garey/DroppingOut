@@ -45,27 +45,6 @@ pub fn getTranscribedText() -> String {
     } else {
         return String::new();
     }
-    
-    // let files = fs::read_dir("./").unwrap();
-    // for file in files {
-    //     let f = file.unwrap().path().file_name().unwrap().to_str().unwrap().to_string();
-    //     // println!("{}",f);
-    //     if f.contains("message.txt") {
-    //         fs::copy("message.txt", "messaged.txt"); 
-
-    //         let mut tmp: String = String::new();
-    //         {
-    //             let mut fd = File::open("messaged.txt").expect("couldnt open file we know exists...");
-    //             eprintln!("FUCKING file descriptor: \'{:?}\'", fd);
-    //             let str = fd.read_to_string(&mut tmp);
-
-    //         }
-    //         eprintln!("FUCKING tmp: \'{}\'", tmp);
-    //         rv = [rv, tmp].concat();
-    //         eprintln!("FUCKING rv: \'{}\'", rv);
-    //         fs::remove_file("message.txt");
-    //     } 
-    // }
 
     return rv;
 }
@@ -173,6 +152,7 @@ impl VoiceEventHandler for Receiver {
                 // first speaking.
 
                 println!("Client disconnected: user {:?}", user_id);
+                
             },
             _ => {
                 // We won't be registering this struct for any more event classes.
