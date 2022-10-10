@@ -1,51 +1,76 @@
 mod commands;
-// use crate::commands::*;
 
-use std::env;
+use async_std::task;
+use futures::join;
+
+use std::{
+    fs,
+    fs::File,
+    env,
+    path::Path,
+    io::prelude::*,
+    time::*,
+};
+
+use serenity::{
+    async_trait,
+    prelude::*,
+    http::client::Http,
+    client::{
+        Client, 
+        EventHandler, 
+        Context
+    },
+    model::{
+        gateway::Ready,
+        id::{
+            GuildId, 
+            ChannelId
+        },
+        application::interaction::{
+            Interaction, InteractionResponseType
+        },
+    },
+};
 
 use songbird::{
-    driver::DecodeMode,
-    model::payload::{ClientDisconnect, Speaking},
     Config,
     Event,
     EventContext,
     EventHandler as VoiceEventHandler,
     SerenityInit,
+    driver::DecodeMode,
+    model::payload::{
+        ClientDisconnect, 
+        Speaking
+    },
 };
 
-use serenity::{
-    client::{Client, EventHandler, Context},
-};
 
-use serenity::async_trait;
-use serenity::model::application::interaction::{Interaction, InteractionResponseType};
-use serenity::model::gateway::Ready;
-use serenity::model::id::{GuildId, ChannelId};
-use serenity::prelude::*;
-use serenity::http::client::Http;
-
-use std::fs;
-use std::fs::File;
-use std::path::Path;
-use std::io::prelude::*;
-use std::time::*;
-
-pub fn getTranscribedText() -> String {
-
-    let mut rv: String = String::new();
+/*
+*   get_transcribed_text: gets text that has been transcribed since the last time it was run
+*   specifically, renames message.txt (the output of whisper) to messaged.txt, then reads in
+*   the text from messaged.txt and returns it as a string.
+*   if message.txt does not exist, nothing is done and a new empty string is returned.
+*/
+pub fn get_transcribed_text() -> Option<String> {
     if Path::new("message.txt").exists() {
-        fs::copy("message.txt", "messaged.txt");
-        {
+        if !fs::copy("message.txt", "messaged.txt").is_ok() {
+            return None;
+        }
+        let mut rv: String = String::new();
+        { // restrict file descriptor to close it as early as possible. 
             let mut fd = File::open("messaged.txt").expect("couldnt open file we know exists...");
             let _ = fd.read_to_string(&mut rv);
         }
-        fs::remove_file("message.txt");
-
+        // if the file cant be removed, we really dont care, it'll be overwritten next time we 
+        // transcribe soemthing.
+        let _ = fs::remove_file("message.txt");
+        return Some(rv);
     } else {
-        return String::new();
+        return None;
     }
 
-    return rv;
 }
 
 struct Receiver;
@@ -54,7 +79,7 @@ impl Receiver {
     pub fn new() -> Self {
         // You can manage state here, such as a buffer of audio packet bytes so
         // you can later store them in intervals.
-        Self { }
+        Self {}
     }
 }
 
@@ -125,22 +150,22 @@ impl VoiceEventHandler for Receiver {
                 // An event which fires for every received rtcp packet,
                 // containing the call statistics and reporting information.
                 // println!("RTCP packet received: {:?}", data.packet);
-                let channel_id = ChannelId(1028322765599682592);
+                // let channel_id = ChannelId(1028322765599682592);
 
-                let http = Http::new_with_application_id(
-                    &env::var("DISCORD_TOKEN").expect("Expected Discord token"),
-                    env::var("APP_ID").expect("Expected Application ID").parse::<u64>().unwrap(),
-                );
+                // let http = Http::new_with_application_id(
+                //     &env::var("DISCORD_TOKEN").expect("Expected Discord token"),
+                //     env::var("APP_ID").expect("Expected Application ID").parse::<u64>().unwrap(),
+                // );
 
-                let tmp = getTranscribedText();
+                // let tmp = get_transcribed_text();
 
-                let msg = channel_id.send_message(&http, |m| {
-                    m.content(tmp.clone())
-                }).await;
+                // let msg = channel_id.send_message(&http, |m| {
+                //     m.content(tmp.clone())
+                // }).await;
 
                 // println!("WHY ARENT YOU PRINTING {} TO {:?}", tmp, channel_id);
 
-                fs::remove_file("message.txt");
+                // fs::remove_file("message.txt");
             },
             Ctx::ClientDisconnect(
                 ClientDisconnect {user_id, ..}
@@ -151,7 +176,6 @@ impl VoiceEventHandler for Receiver {
                 // first speaking.
 
                 // println!("Client disconnected: user {:?}", user_id);
-                
             },
             _ => {
                 // We won't be registering this struct for any more event classes.
@@ -234,6 +258,7 @@ impl EventHandler for Handler {
 async fn main() {
     // Configure the client with your Discord bot token in the environment.
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
+    let app_id = env::var("APP_ID").expect("Expected Application ID").parse::<u64>().unwrap();
 
     let intents = GatewayIntents::non_privileged()
         | GatewayIntents::MESSAGE_CONTENT;
@@ -243,22 +268,40 @@ async fn main() {
         .decode_mode(DecodeMode::Decode);
 
     // Build our client.
-    let mut client = Client::builder(token, intents)
+    let mut client = Client::builder(token.clone(), intents)
         .event_handler(Handler)
         .register_songbird_from_config(songbird_config)
         .await
         .expect("Error creating client");
 
+    let channel_id = ChannelId(1028322765599682592);
+
+
+    let clientresult = client.start();
+    let tr_loop = print_transcript(channel_id, token, app_id);
+
+    join!(clientresult, tr_loop);
     // Finally, start a single shard, and start listening to events.
     //
     // Shards will automatically attempt to reconnect, and will perform
     // exponential backoff until it reconnects.
-    if let Err(why) = client.start().await {
-        println!("Client error: {:?}", why);
-    }
+    // if let Err(why) = client.start().await {
+    //     println!("Client error: {:?}", why);
+    // }
 }
 
 
-async fn print_transcript(message: String) {
-
+async fn print_transcript(channel_id: ChannelId, token: String, app_id: u64) {
+    let http = Http::new_with_application_id(&token, app_id);
+    loop {
+        // let tmp = get_transcribed_text();
+        match get_transcribed_text() {
+            Some(msg) => {
+                println!("sending {}", msg);
+                let _ = channel_id.send_message(&http, |m| {m.content(msg)}).await;
+            },
+            None => (),//println!("no new content"),
+        }
+        task::sleep(Duration::from_secs(1)).await;
+    }
 }

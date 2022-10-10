@@ -1,16 +1,21 @@
-use crate::{Receiver, EventHandler};
-use songbird::{CoreEvent};
-use serenity::async_trait;
+use crate::Receiver;
+use songbird::CoreEvent;
 
-use serenity::client::Context;
-use serenity::model::id::GuildId;
-use serenity::builder::CreateApplicationCommand;
-use serenity::model::prelude::interaction::application_command::{
-    CommandDataOption,
-    CommandDataOptionValue,
+use serenity::{
+    client::Context,
+    builder::CreateApplicationCommand,
+    model::{
+        id::GuildId,
+        channel::ChannelType,
+        prelude::{
+            command::CommandOptionType,
+            interaction::application_command::{
+                CommandDataOption,
+                CommandDataOptionValue,
+            },
+        }
+    },
 };
-use serenity::model::prelude::command::CommandOptionType;
-use serenity::model::channel::ChannelType;
 
 use std::process::Command;
 
