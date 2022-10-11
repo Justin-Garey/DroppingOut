@@ -1,6 +1,6 @@
 #!/bin/env sh
 
-model="small"
+model="tiny"
 language="English"
 
 while true; do 

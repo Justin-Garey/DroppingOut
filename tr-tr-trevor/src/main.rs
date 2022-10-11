@@ -2,6 +2,8 @@ mod commands;
 
 use async_std::task;
 use futures::join;
+#[macro_use]
+extern crate lazy_static;
 
 use std::{
     fs,
@@ -10,6 +12,7 @@ use std::{
     path::Path,
     io::prelude::*,
     time::*,
+    sync::{Arc, Mutex},
 };
 
 use serenity::{
@@ -249,11 +252,13 @@ impl EventHandler for Handler {
         .await;
 
         // println!("I now have the following guild slash commands: {:#?}", commands);
-
+        
     }
 }
 
-
+lazy_static!{
+    static ref CHANNEL_ID_ARC: Mutex<ChannelId> = Mutex::new(ChannelId(0));
+}
 #[tokio::main]
 async fn main() {
     // Configure the client with your Discord bot token in the environment.
@@ -269,35 +274,41 @@ async fn main() {
 
     // Build our client.
     let mut client = Client::builder(token.clone(), intents)
-        .event_handler(Handler)
-        .register_songbird_from_config(songbird_config)
-        .await
-        .expect("Error creating client");
-
-    let channel_id = ChannelId(1028322765599682592);
-
-
-    let clientresult = client.start();
-    let tr_loop = print_transcript(channel_id, token, app_id);
-
-    join!(clientresult, tr_loop);
+    .event_handler(Handler)
+    .register_songbird_from_config(songbird_config)
+    .await
+    .expect("Error creating client");
+    
+    // let channel_id = ChannelId(1028322765599682592);
+    
     // Finally, start a single shard, and start listening to events.
     //
     // Shards will automatically attempt to reconnect, and will perform
     // exponential backoff until it reconnects.
+    let clientresult = client.start();
+    let tr_loop = print_transcript(token, app_id);
+
+    let _ = join!(clientresult, tr_loop);
     // if let Err(why) = client.start().await {
     //     println!("Client error: {:?}", why);
     // }
 }
 
 
-async fn print_transcript(channel_id: ChannelId, token: String, app_id: u64) {
+async fn print_transcript(token: String, app_id: u64) {
     let http = Http::new_with_application_id(&token, app_id);
     loop {
         // let tmp = get_transcribed_text();
         match get_transcribed_text() {
             Some(msg) => {
                 println!("sending {}", msg);
+                let mut channel_id: ChannelId;
+                if let Ok(mut locked_channel_id_ref) = CHANNEL_ID_ARC.lock(){
+                    channel_id = *locked_channel_id_ref;
+                }else{
+                    break;
+                }
+                println!("sending message to channel {}", channel_id.as_u64());
                 let _ = channel_id.send_message(&http, |m| {m.content(msg)}).await;
             },
             None => (),//println!("no new content"),
