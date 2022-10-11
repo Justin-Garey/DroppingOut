@@ -1,4 +1,4 @@
-use crate::Receiver;
+use crate::{Receiver, GLOBAL_GUILD_TO_CHANNEL};
 use songbird::CoreEvent;
 
 use serenity::{
@@ -27,6 +27,12 @@ pub async fn run(ctx: &Context, guild_id: GuildId, options: &[CommandDataOption]
     .resolved
     .as_ref()
     .expect("Expected channel object");
+    let outchannel = options
+    .get(1)
+    .expect("Expected channel option")
+    .resolved
+    .as_ref()
+    .expect("Expected channel object");
 
     let channel_id = 
         if let CommandDataOptionValue::Channel(channel) = option {
@@ -36,8 +42,26 @@ pub async fn run(ctx: &Context, guild_id: GuildId, options: &[CommandDataOption]
                 _                   => return "Select a voice channel".to_string(),
             }
         } else {
-            return "Please provide a valid channel".to_string()
+            return "Please provide a valid Voice channel".to_string()
         };
+    let txtchannel_id = 
+        if let CommandDataOptionValue::Channel(channel) = outchannel {
+            match channel.kind {
+                ChannelType::Text           |
+                ChannelType::Private        |
+                ChannelType::PublicThread   | 
+                ChannelType::PrivateThread   => channel.id,
+                _                 => return "Select an output Text channel".to_string(),
+            }
+        } else {
+            return "Please provide a valid Text channel".to_string()
+        };
+    println!("setting cell of channel to {}", txtchannel_id);
+    GLOBAL_GUILD_TO_CHANNEL.with(|cell_of_channel| {
+        *cell_of_channel.borrow_mut() = txtchannel_id.clone();
+        println!("cell of channel is now {:?}", cell_of_channel);
+    });
+
     let manager = songbird::get(ctx).await
         .expect("Songbird Voice client placed in at initialisation.").clone();
     let (handler_lock, conn_result) = manager.join(guild_id, channel_id).await;
@@ -75,7 +99,7 @@ pub async fn run(ctx: &Context, guild_id: GuildId, options: &[CommandDataOption]
     }
 
 
-    format!("Transcription of channel <#{}> begun.", channel_id)
+    format!("Transcription of channel <#{}> to <#{}>begun.", channel_id, txtchannel_id)
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
@@ -86,6 +110,13 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
             option
                 .name("voice_channel")
                 .description("Voice Channel to connect to")
+                .kind(CommandOptionType::Channel)
+                .required(true)
+        })
+        .create_option( |option| {
+            option
+                .name("output_channel")
+                .description("Text Channel to transcribe to")
                 .kind(CommandOptionType::Channel)
                 .required(true)
         })

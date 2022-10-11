@@ -4,6 +4,7 @@ use async_std::task;
 use futures::join;
 
 use std::{
+    cell::RefCell,
     fs,
     fs::File,
     env,
@@ -46,6 +47,11 @@ use songbird::{
     },
 };
 
+
+thread_local!(
+    static GLOBAL_GUILD_TO_CHANNEL: RefCell<ChannelId> = 
+        RefCell::new(ChannelId(0)) 
+    );
 
 /*
 *   get_transcribed_text: gets text that has been transcribed since the last time it was run
@@ -274,11 +280,8 @@ async fn main() {
         .await
         .expect("Error creating client");
 
-    let channel_id = ChannelId(1028322765599682592);
-
-
     let clientresult = client.start();
-    let tr_loop = print_transcript(channel_id, token, app_id);
+    let tr_loop = print_transcript(token, app_id);
 
     join!(clientresult, tr_loop);
     // Finally, start a single shard, and start listening to events.
@@ -291,14 +294,19 @@ async fn main() {
 }
 
 
-async fn print_transcript(channel_id: ChannelId, token: String, app_id: u64) {
+async fn print_transcript(token: String, app_id: u64) {
     let http = Http::new_with_application_id(&token, app_id);
     loop {
         // let tmp = get_transcribed_text();
         match get_transcribed_text() {
             Some(msg) => {
-                println!("sending {}", msg);
-                let _ = channel_id.send_message(&http, |m| {m.content(msg)}).await;
+                let channelid = 
+                    GLOBAL_GUILD_TO_CHANNEL.with(|cell_of_channel| {
+                        println!("sending {} to {:?}", msg, cell_of_channel);
+                        *cell_of_channel.borrow()
+                    });
+                println!("channelID is {}", channelid);
+                let _ = channelid.send_message(&http, |m| {m.content(msg)}).await;
             },
             None => (),//println!("no new content"),
         }
