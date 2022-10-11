@@ -1,15 +1,14 @@
 #!/bin/env sh
 
-model="small"
+model="tiny"
 language="English"
 
 while true; do 
 	files="$( /bin/ls | tr ' ' '\n' | grep "_processing_" | sort | uniq | head -1)"
-	if [[ $files ]]; then
-		echo "There are files to encode."
+	if [ $files ]; then
+		echo "There are files to encode. the first is $files"
 
 		oldestfile="$files"
-		#"$( echo ${files} | head -1 )"
 		outfilename="$( echo ${oldestfile} | sed -E 's/[0-9]*_processing_([0-9]*)\.pcm/transcribed_\1/g' )"
 		outfileprevious="${outfilename}.msg"
 		messagefile="message.txt"
@@ -27,7 +26,7 @@ while true; do
 
 		echo "Done with ${oldestfile}"
 	else
-		echo "Waiting for something to do"
+		# echo "Waiting for something to do"
 		sleep 5
 	fi
 done
